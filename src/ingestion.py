@@ -57,6 +57,11 @@ def ingest_pdfs(data_dir: str = DATA_DIR, chunking_type: str = 'tokens') -> List
             print(f"Processing: {pdf_path}")
             print(f"Chunking type: {chunking_type}")
             text = extract_text_from_pdf(pdf_path)
+            chunks = chunk_text_by_words(text)
+            match chunking_type:
+                case "tokens":
+                    chunks = chunk_text_by_tokens(text)
+                case "words":
                     chunks = chunk_text_by_words(text)
                 case _:
                     raise ValueError(f"Invalid chunking_type: {chunking_type}. Must be 'tokens' or 'words'.")
@@ -94,5 +99,5 @@ if __name__ == "__main__":
 
     chunks = ingest_pdfs(data_dir = args.data_dir, chunking_type= args.chunking_type)
     print(f"Total chunks extracted: {len(chunks)}")
-    print(f"Example chunk: {chunks[22]['content'][:500]}")
+    print(f"Example chunk: {chunks[45]['content'][:500]}")
 
