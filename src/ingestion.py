@@ -82,7 +82,7 @@ if __name__ == "__main__":
         type = str,
         default = "tokens",
         choices = ["tokens", "words"],
-        help = "Chunking type: 'token' (default) or 'words')."
+        help = "Chunking type: 'tokens' (default) or 'words'."
             )
     parser.add_argument(
         "--data_dir",
