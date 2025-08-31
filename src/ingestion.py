@@ -1,12 +1,17 @@
 import os
 import fitz  # PyMuPDF
 from typing import List
+import tiktoken
+
 
 # -------------------------
 # Config
 # -------------------------
 DATA_DIR = "../data"    # relative path to the data folder containing the PDF files
+MODEL_ENCODING = "cl100k_base"    #
 CHUNK_SIZE = 500        # approximate number of tokens per chunk
+CHUNK_OVERLAP = 50      # overlapping tokens for context continuity
+CHUNK_TYPE = 'tokens'   # select chunk type ['words', 'tokens']
 
 # -------------------------
 # Functions
@@ -19,8 +24,8 @@ def extract_text_from_pdf(pdf_path: str) -> str:
             text += page.get_text()
     return text
 
-def chunk_text(text: str, chunk_size: int = CHUNK_SIZE) -> List[str]:
-    """Split text into chunks with roughly chunk_size tokens."""
+def chunk_text_by_words(text: str, chunk_size: int = CHUNK_SIZE) -> List[str]:
+    """Split text into chunks with roughly chunk_size words."""
     # Using simple white space-based chunking
     words = text.split()
     chunks = []
@@ -29,15 +34,32 @@ def chunk_text(text: str, chunk_size: int = CHUNK_SIZE) -> List[str]:
         chunks.append(chunk)
     return chunks
 
-def ingest_pdfs(data_dir: str = DATA_DIR) -> List[dict]:
+def chunk_text_by_tokens(text: str, chunk_size: int = CHUNK_SIZE, chunk_overlap: int = CHUNK_OVERLAP) -> List[str]:
+    """Split text into chunks with roughly chunk_size tokens with overlap."""
+    encoding = tiktoken.get_encoding(MODEL_ENCODING)
+    tokens = encoding.encode(text)
+
+    chunks = []
+    for i in range(0, len(tokens), chunk_size-chunk_overlap):
+        chunk_tokens = tokens[i:i+chunk_size]
+        chunk_text = encoding.decode(chunk_tokens)
+        chunks.append(chunk_text)
+    return chunks
+
+def ingest_pdfs(data_dir: str = DATA_DIR, chunking_type: str = CHUNK_TYPE) -> List[dict]:
     """Process all PDFs in data folder and return chunks with metadata"""
     all_chunks =[]
     for file_name in os.listdir(data_dir):
         if file_name.endswith(".pdf"):
             pdf_path = os.path.join(data_dir, file_name)
             print(f"Processing: {pdf_path}")
+            print(f"Chunking type: {chunking_type}")
             text = extract_text_from_pdf(pdf_path)
-            chunks = chunk_text(text, CHUNK_SIZE)
+            match chunking_type:
+                case "tokens":
+                    chunks = chunk_text_by_tokens(text)
+                case "words":
+                    chunks = chunk_text_by_words(text)
 
             for idx, chunk in enumerate(chunks):
                 all_chunks.append({
