@@ -11,7 +11,7 @@ import argparse
 # -------------------------
 PROJECT_ROOT = Path(__file__).resolve().parent.parent   # project root path
 DATA_DIR = PROJECT_ROOT/"data"    # path to data folder containing the PDF files
-MODEL_ENCODING = "cl100k_base"    #
+MODEL_ENCODING = "cl100k_base"    # Encoding name for tiktoken; should match the model used for chunking
 CHUNK_SIZE = 500        # approximate number of tokens per chunk
 CHUNK_OVERLAP = 50      # overlapping tokens for context continuity
 
