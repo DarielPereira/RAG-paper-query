@@ -1,17 +1,19 @@
 import os
+from pathlib import Path
 import fitz  # PyMuPDF
 from typing import List
 import tiktoken
+import argparse
 
 
 # -------------------------
 # Config
 # -------------------------
-DATA_DIR = "../data"    # relative path to the data folder containing the PDF files
+PROJECT_ROOT = Path(__file__).resolve().parent.parent   # project root path
+DATA_DIR = PROJECT_ROOT/"data"    # path to data folder containing the PDF files
 MODEL_ENCODING = "cl100k_base"    #
 CHUNK_SIZE = 500        # approximate number of tokens per chunk
 CHUNK_OVERLAP = 50      # overlapping tokens for context continuity
-CHUNK_TYPE = 'tokens'   # select chunk type ['words', 'tokens']
 
 # -------------------------
 # Functions
@@ -46,7 +48,7 @@ def chunk_text_by_tokens(text: str, chunk_size: int = CHUNK_SIZE, chunk_overlap:
         chunks.append(chunk_text)
     return chunks
 
-def ingest_pdfs(data_dir: str = DATA_DIR, chunking_type: str = CHUNK_TYPE) -> List[dict]:
+def ingest_pdfs(data_dir: str = DATA_DIR, chunking_type: str = 'tokens') -> List[dict]:
     """Process all PDFs in data folder and return chunks with metadata"""
     all_chunks =[]
     for file_name in os.listdir(data_dir):
@@ -76,7 +78,23 @@ def ingest_pdfs(data_dir: str = DATA_DIR, chunking_type: str = CHUNK_TYPE) -> Li
 # Test/Run
 # ------------------------
 if __name__ == "__main__":
-    chunks = ingest_pdfs()
+    parser = argparse.ArgumentParser(description = "Ingest PDFs into text chunks.")
+    parser.add_argument(
+        "--chunking_type",
+        type = str,
+        default = "tokens",
+        choices = ["tokens", "words"],
+        help = "Chunking type: 'token' (default) or 'words')."
+            )
+    parser.add_argument(
+        "--data_dir",
+        type = str,
+        default = DATA_DIR,
+        help = "Directory where PDFs are located."
+    )
+    args = parser.parse_args()
+
+    chunks = ingest_pdfs(data_dir = args.data_dir, chunking_type= args.chunking_type)
     print(f"Total chunks extracted: {len(chunks)}")
     print(f"Example chunk: {chunks[22]['content'][:500]}")
 
