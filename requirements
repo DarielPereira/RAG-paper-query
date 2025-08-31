@@ -1,1 +1,8 @@
+#requirements.txt
 
+PyMuPDF       # PDF extraction
+tiktoken      # token counting and chunking
+chromadb      # vector database
+openai        # embeddings and GPT API
+streamlit     # front-end UI
+nltk          # optional text preprocessing
