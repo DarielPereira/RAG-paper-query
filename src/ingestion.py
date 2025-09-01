@@ -57,7 +57,7 @@ def ingest_pdfs(data_dir: str = DATA_DIR, chunking_type: str = 'tokens') -> List
             print(f"Processing: {pdf_path}")
             print(f"Chunking type: {chunking_type}")
             text = extract_text_from_pdf(pdf_path)
-            chunks = chunk_text_by_words(text)
+
             match chunking_type:
                 case "tokens":
                     chunks = chunk_text_by_tokens(text)
