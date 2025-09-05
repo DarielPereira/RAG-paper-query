@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 from openai import OpenAI
 from typing import List, Dict, Any
+from tqdm import tqdm
 
 # -------------------------
 # Config
@@ -44,7 +45,7 @@ def embed_chunks(chunks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """generate embeddings for a list of text chunks with metadata"""
     embedded_chunks = []
 
-    for chunk in chunks:
+    for chunk in tqdm(chunks, desc="Generating embeddings"):
         content = chunk["content"]
         metadata = chunk["metadata"]
 
