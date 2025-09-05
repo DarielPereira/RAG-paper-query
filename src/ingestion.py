@@ -4,6 +4,7 @@ import fitz  # PyMuPDF
 from typing import List
 import tiktoken
 import argparse
+from tqdm import tqdm
 
 
 # -------------------------
@@ -50,12 +51,14 @@ def chunk_text_by_tokens(text: str, chunk_size: int = CHUNK_SIZE, chunk_overlap:
 
 def ingest_pdfs(data_dir: str = DATA_DIR, chunking_type: str = 'tokens') -> List[dict]:
     """Process all PDFs in data folder and return chunks with metadata"""
+    pdf_count = 0
     all_chunks =[]
-    for file_name in os.listdir(data_dir):
+
+    print(f"Chunking type: {chunking_type}")
+    for file_name in tqdm(os.listdir(data_dir), desc="Ingesting PDFs"):
         if file_name.endswith(".pdf"):
+            pdf_count += 1
             pdf_path = os.path.join(data_dir, file_name)
-            print(f"Processing: {pdf_path}")
-            print(f"Chunking type: {chunking_type}")
             text = extract_text_from_pdf(pdf_path)
 
             match chunking_type:
@@ -74,6 +77,7 @@ def ingest_pdfs(data_dir: str = DATA_DIR, chunking_type: str = 'tokens') -> List
                         "chunk index": idx
                     }
                 })
+    print(f"Total PDFs processed: {pdf_count}")
     return all_chunks
 
 
@@ -99,5 +103,6 @@ if __name__ == "__main__":
 
     chunks = ingest_pdfs(data_dir = args.data_dir, chunking_type= args.chunking_type)
     print(f"Total chunks extracted: {len(chunks)}")
-    print(f"Example chunk: {chunks[45]['content'][:500]}")
+    print(f"Example chunk: \n '{chunks[45]['content'][:500]}'")
+    print(f"Metadata: {chunks[45]['metadata']}")
 
