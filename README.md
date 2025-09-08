@@ -1,7 +1,8 @@
 # RAG Paper Query System
 
 This project implements a **Retrieval-Augmented Generation (RAG)** pipeline for querying research papers.  
-It allows ingestion of PDFs, splitting them into chunks (word-based or token-based). Chunks are embedded and prepared for vector database storage.  
+It allows ingestion of PDFs, splitting them into chunks (word-based or token-based). Chunks are embedded and stored in 
+vector database storage (cloud Azure AI search or local ChromaDB).  
 A Streamlit UI will be added in later steps.
 
 ---
@@ -12,11 +13,11 @@ A Streamlit UI will be added in later steps.
   - **Word-based** (simple, quick).
   - **Token-based** using [tiktoken](https://github.com/openai/tiktoken) (preferred for embeddings).
 - Embedding generation.
+- Store in vector DB (Azure AI search and ChromaDB)
 
 ---
 
 ## Features To Do
-- Set up DB for embedding storage.
 - Implement retrieval and generation pipeline.
 - Build Streamlit UI for querying.
 
@@ -68,7 +69,7 @@ Example chunk:
  '2020, respectively. She was a Postdoctoral Fellow ...'
 Metadata: {'title': 'Han et al. - 2023 - Toward Extra Large-Scale MIMO New Channel Propert.pdf', 'chunk index': 45}
 ```
-### Embedding Generation
+### Embedding Generation (it incorporates ingestion and chunking)
 To test embedding generation:
 1. Ensure you have set your OpenAI API key in the environment:
 2. Run the embeddings script:
@@ -104,6 +105,30 @@ multiple-input–multiple-output (MIMO), low-cost arch
 Chunk 2 metadata: {'title': 'Han et al. - 2023 - Toward Extra Large-Scale MIMO New Channel Propert.pdf', 'chunk index': 2}
 Embedding generation completed.
 ```
-
-
+### Vector DB Storage (it incorporates ingestion, chunking and embedding generation)    
+To test storage in vector DB:
+1. Ensure you have set your API keys in the environment:
+   - For Azure AI Search, make sure to set the key and endpoint (otherwise it would fallback to local chromaDB).
+2. Run the vector DB storage script:
+- For storing '--limit' first '--chuking_type'-based chunks at '--data_dir
+```bash
+python src/vector_db.py --chunking_type tokens --limit 10 --data_dir ./data 
+```
+3. Output:
+- Storage details are printed for each chunk.
+- Example:
+```console
+Starting vector database pipeline...
+Local ChromaDB collection ready
+Using local ChromaDB as vector database.
+Chunking type: tokens
+Ingesting PDFs: 100%|███████████...█████████████████████████████████████████| 3/3 [00:00<00:00,  4.98it/s]
+Total PDFs processed: 3
+Extracted 1478 from PDFs.
+Processing 10 chunks for embedding and upsert.
+Generating embeddings: 100%|██████████...████████████████████████████████| 10/10 [00:01<00:00,  5.17it/s]
+Generated embeddings for 10 chunks.
+Upserted 10 documents to ChromaDB.
+Upsert completed.
+```
 

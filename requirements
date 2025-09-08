@@ -8,3 +8,4 @@ streamlit     # front-end UI
 nltk          # optional text preprocessing
 tqdm          # progress bars
 python-dotenv # environment variable management
+azure-search-documents       # Azure AI Search
