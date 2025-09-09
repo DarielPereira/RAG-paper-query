@@ -1,7 +1,10 @@
 import os
+
+import numpy as np
 import requests
 from dotenv import load_dotenv
 from pathlib import Path
+import random
 
 # Load environment variables
 load_dotenv()
@@ -11,6 +14,7 @@ load_dotenv()
 # --------------------------
 PROJECT_ROOT = Path(__file__).resolve().parent.parent   # project root path
 DATA_DIR = PROJECT_ROOT/"data"    # path to data folder containing the PDF files
+CHROMADB_DIR = PROJECT_ROOT/"chroma"  # path to local ChromaDB storage
 
 # --------------------------
 # Azure AI Search Setup
@@ -113,7 +117,7 @@ class VectorDB:
 
     # Initialize local ChromaDB
     def _init_chromadb(self):
-        self.client = chromadb.Client()
+        self.client = chromadb.PersistentClient(path=str(CHROMADB_DIR), settings=Settings(allow_reset=True))
         self.collection = self.client.get_or_create_collection(name="rag_collection")
         print("Local ChromaDB collection ready")
 
@@ -134,14 +138,19 @@ class VectorDB:
             self.search_client.upload_documents(documents=actions)
             print(f"Upserted {len(docs)} documents to Azure AI Search.")
         elif self.use_chromadb:
-            ids = [doc["id"] for doc in docs]
-            embeddings = [doc["embedding"] for doc in docs]
-            metadatas = [{"title": doc.get("metadata_title"),
-                          "chunk_index": doc.get("metadata_chunk_index"),
-                          "chunking_type": doc.get("metadata_chunking_type")} for doc in docs]
-            documents = [doc["content"] for doc in docs]
+            batch_size = 100
+            total = len(docs)
+            for i in range(0, total, batch_size):
+                batch = docs[i:i + batch_size]
 
-            self.collection.add(ids=ids, embeddings=embeddings, metadatas=metadatas, documents=documents)
+                ids = [doc["id"] for doc in batch]
+                embeddings = [doc["embedding"] for doc in batch]
+                metadatas = [{"title": doc.get("metadata_title"),
+                              "chunk_index": doc.get("metadata_chunk_index"),
+                              "chunking_type": doc.get("metadata_chunking_type")} for doc in batch]
+                documents = [doc["content"] for doc in batch]
+
+                self.collection.add(ids=ids, embeddings=embeddings, metadatas=metadatas, documents=documents)
             print(f"Upserted {len(docs)} documents to ChromaDB.")
         else:
             raise RuntimeError("No vector database initialized.")
@@ -222,7 +231,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--limit",
         type = int,
-        default = 10,
+        default = None,
         help = "Number of documents to process for testing."
     )
     args = parser.parse_args()
@@ -236,8 +245,12 @@ if __name__ == "__main__":
     chunks = ingest_pdfs(data_dir=args.data_dir, chunking_type=args.chunking_type)
     print(f"Extracted {len(chunks)} from PDFs.")
 
-    # 3. Take a limited number for testing
-    sample_chunks = chunks[:args.limit]
+    # 3. Take a random limited number for testing (if specified)
+    if args.limit is not None:
+        sample_chunks = random.sample(chunks, args.limit)
+    else:
+        sample_chunks = chunks
+
     print(f"Processing {len(sample_chunks)} chunks for embedding and upsert.")
 
     # 4. Embed chunks

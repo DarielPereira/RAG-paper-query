@@ -2,7 +2,8 @@
 
 This project implements a **Retrieval-Augmented Generation (RAG)** pipeline for querying research papers.  
 It allows ingestion of PDFs, splitting them into chunks (word-based or token-based). Chunks are embedded and stored in 
-vector database storage (cloud Azure AI search or local ChromaDB).  
+vector database storage (cloud Azure AI search or local ChromaDB). Queries can be made to retrieve relevant chunks 
+and generate answers using OpenAI's language models.
 A Streamlit UI will be added in later steps.
 
 ---
@@ -14,11 +15,11 @@ A Streamlit UI will be added in later steps.
   - **Token-based** using [tiktoken](https://github.com/openai/tiktoken) (preferred for embeddings).
 - Embedding generation.
 - Store in vector DB (Azure AI search and ChromaDB)
+- Retrieval from DB and query answer.
 
 ---
 
 ## Features To Do
-- Implement retrieval and generation pipeline.
 - Build Streamlit UI for querying.
 
 ---
@@ -130,5 +131,52 @@ Generating embeddings: 100%|██████████...██████�
 Generated embeddings for 10 chunks.
 Upserted 10 documents to ChromaDB.
 Upsert completed.
+```
+### Querying (it assumes you have already stored chunks in vector DB)
+To test querying from vector DB:
+1. Ensure you have set your API keys in the environment:
+   - For Azure AI Search, make sure to set the key and endpoint (otherwise it would fallback to local chromaDB).
+   - Make sure you have already ingested, chunked, embedded and stored some PDFs in the vector DB in .chroma folder.
+   - Make sure you have set your OpenAI API key in the environment for generating answers.
+2. Run the query script:
+- For answering the query in '--query' and retrieving top '--top_k' reference chunks
+```bash
+python src/query.py --query "What are the benefits of extra large-scale MIMO?" --top_k 3
+```
+3. Output:
+- Retrieved chunks and generated answer are printed.
+- Example:
+```console
+Local ChromaDB collection ready
+Using local ChromaDB as vector database.
+
+RAG Answer for query: 'tell me about massive mimo'
+
+Massive MIMO (Multiple Input Multiple Output) refers to a technology that employs a large number of antennas at the base station to serve multiple users simultaneously, enhancing spectral efficiency and improving signal quality. It is particularly effective in dense urban environments and is often integrated with distributed antenna systems to optimize performance.
+
+Key aspects of massive MIMO include:
+
+1. **User Capacity**: More antennas at the user side can accommodate more users, which is crucial for high-demand scenarios (Feng et al., IEEE Communications Letters).
+2. **Beamforming Techniques**: Techniques like sparse multicast beamforming and multicell beamforming are utilized to manage interference and improve signal strength (Feng et al., IEEE Trans. Wireless Commun.; Zhao et al., IEEE Trans. Signal Process.).
+3. **Joint Optimization**: The optimization of precoding matrices and selection of active remote radio heads (RRHs) is essential for minimizing network power consumption (NPC) and maximizing utility in MIMO systems (Feng et al., IEEE Communications Letters).
+
+For further details, refer to the works of Feng, Ge, and Lu on hierarchical transmission optimization, as well as Zhao, Quek, and Lei on coordinated multipoint transmission.
+
+References:
+1. Pan et al. - 2017 - Joint Precoding and RRH Selection for User-Centric.pdf (chunk 1674)
+Snippet:  “Hierarchical transmission optimization for
+massively dense distributed antenna systems,” IEEE Communications
+Letters, vol. 19, no. 4, pp...
+
+2. Pan et al. - 2017 - Joint Precoding and RRH Selection for User-Centric.pdf (chunk 1673)
+Snippet: 34] W. Feng, N. Ge, and J. Lu, “Hierarchical transmission optimization for
+massively dense distributed antenna systems,” IEEE...
+
+(...)
+
+10. Pan et al. - 2017 - Joint Precoding and RRH Selection for User-Centric.pdf (chunk 1637)
+Snippet:  MIMO applications,” International Journal of Antennas and
+Propagation, vol. 2014, 2014.
+[26] K. Wang...
 ```
 
